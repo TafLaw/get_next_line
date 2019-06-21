@@ -6,20 +6,40 @@
 /*   By: tmuzeren <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/17 11:27:39 by tmuzeren          #+#    #+#             */
-/*   Updated: 2019/06/17 11:51:59 by tmuzeren         ###   ########.fr       */
+/*   Updated: 2019/06/21 11:09:24 by tmuzeren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include "libft.h"
 
 int		get_next_line(const int fd, char **line)
 {
-	int		count;
+	int				i;
+	int				count;
+	char			buff[BUFF_SIZE + 1];
+	static char			*str;
 
-	count = 0;
-	while (*line[count] < buff)
+	str = "";
+	i = 0;
+	while (read(fd, buff, BUFF_SIZE) > 0)
 	{
-		read(*line[count]);
+		buff[BUFF_SIZE] = '\0';
+		str = ft_strjoin(str, buff);
+	/*	while (str[i] != '\0')
+		{
+			if (str[i] == '\n')
+			{
+				str[i] = '\0';
+				*line = ft_strdup(str);
+				return (1);
+			}
+			i++;
+		}*/
+		*line = ft_strdup(str);
+		if (ft_strchr(buff, '\n'))
+			return (1);
 	}
+	//buff[count] = '\0';
+	//*line = ft_strdup("THE END!");
+	return (1);
 }
