@@ -6,52 +6,65 @@
 /*   By: tmuzeren <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/17 11:27:39 by tmuzeren          #+#    #+#             */
-/*   Updated: 2019/06/25 17:13:21 by tmuzeren         ###   ########.fr       */
+/*   Updated: 2019/07/02 09:52:09 by tmuzeren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int		step(char **line, char *str, unsigned int size)
+static char		*a_read(int fd, char **str, char *buff)
 {
-	unsigned int	i;
-	char			*temp;
+	char	*temp;
+
+	temp = ft_strjoin(str[fd], buff);
+	free(str[fd]);
+	return (temp);
+}
+
+static int		step(int fd, int val, char **str, char **line)
+{
+	int		i;
+	char	*temp;
 
 	i = 0;
-	temp = ft_strdup(str);
-	while (str[i] != '\0' && i < size)
-	{
-		if (str[i] == '\n') 
-			break ;
+	while (str[fd][i] != '\n' && str[fd][i] != '\0')
 		i++;
+	if (str[fd][i] == '\n')
+	{
+		*line = ft_strsub(str[fd], 0, i);
+		temp = ft_strsub(str[fd], i + 1, ft_strlen(str[fd]));
+		free(str[fd]);
+		str[fd] = temp;
 	}
-	*line = ft_strsub(temp, 0, i);
-	ft_strdel(&temp);
-	if (ft_strlen(*line) == 0)
-		return (0);
-	free(*line);
+	else
+	{
+		if (val == BUFF_SIZE)
+			return (get_next_line(fd, line));
+		*line = ft_strdup(str[fd]);
+		ft_strdel(&str[fd]);
+		free(str[fd]);
+	}
 	return (1);
 }
 
-int		get_next_line(const int fd, char **line)
+int				get_next_line(int fd, char **line)
 {
-	//int				count;
-	char			buff[BUFF_SIZE + 1];
-	static char		*str;
-	
-	str = "";
-	if (fd < 0 || line == NULL || read(fd, buff, 0) < 0)
+	int			val;
+	static char	*str[255];
+	char		buff[BUFF_SIZE + 1];
+
+	if (fd < 0 || !line || read(fd, buff, 0) < 0)
 		return (-1);
-	/*if (fd == 0)
-		return (0);*/
-	while (read(fd, buff, BUFF_SIZE) > 0)
+	while ((val = read(fd, buff, BUFF_SIZE)) > 0)
 	{
-		buff[BUFF_SIZE] = '\0';
-		str = ft_strjoin(str, buff);
-		free(str);
+		buff[val] = '\0';
+		if (str[fd] == NULL)
+			str[fd] = ft_strnew(BUFF_SIZE);
+		str[fd] = a_read(fd, str, buff);
 		if (ft_strchr(buff, '\n'))
 			break ;
-		ft_strclr(buff);
 	}
-	return (step(line, str, ft_strlen(str)));
+	if (val == 0 && (str[fd] == NULL || str[fd][0] == '\0'))
+		return (0);
+	return (step(fd, val, str, line));
 }
